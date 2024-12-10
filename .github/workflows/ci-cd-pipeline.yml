@@ -9,7 +9,32 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Stap 1: Check out repository
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Hello World
-        run: echo "Pipeline eerste stap!"
+
+      # Stap 2: Installeer Java (Dependency-Check vereist Java)
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin' # Alternatief: adopt, zulu, etc.
+          java-version: '17' # Of een versie die Dependency-Check ondersteunt
+
+      # Stap 3: Maak Dependency-Check uitvoerbaar
+      - name: Prepare Dependency-Check
+        run: chmod +x tools/dependency-check/bin/dependency-check.sh
+
+      # Stap 4: Voer Dependency-Check uit
+      - name: Run OWASP Dependency-Check
+        run: |
+          tools/dependency-check/bin/dependency-check.sh \
+          --project "CI/CD Isah Pipeline" \
+          --out reports/dependency-check-report.html \
+          --scan .
+
+      # Optioneel: Upload het rapport als een artifact
+      - name: Upload Dependency-Check Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: reports/dependency-check-report.html
